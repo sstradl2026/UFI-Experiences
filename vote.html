@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>UFI Experiences Vote</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    :root {
+      --ufi-blue: #0d3956;
+      --ufi-green: #79BD43;
+      --light-bg: #f5f7f8;
+      --border: #d6dde2;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: var(--light-bg);
+      color: var(--ufi-blue);
+      padding: 24px;
+    }
+
+    .wrap {
+      max-width: 560px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 18px;
+      padding: 24px;
+      box-shadow: 0 4px 18px rgba(0,0,0,0.08);
+    }
+
+    h1 {
+      font-size: 26px;
+      margin: 0 0 6px;
+    }
+
+    .intro {
+      font-size: 14px;
+      color: #52616d;
+      margin-bottom: 22px;
+    }
+
+    .section {
+      margin-top: 24px;
+    }
+
+    h2 {
+      font-size: 17px;
+      margin-bottom: 10px;
+    }
+
+    .option {
+      display: block;
+      width: 100%;
+      padding: 13px 14px;
+      margin: 8px 0;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: white;
+      color: var(--ufi-blue);
+      text-align: left;
+      font-size: 15px;
+      cursor: pointer;
+    }
+
+    .option.selected {
+      border: 2px solid var(--ufi-green);
+      background: #f3faee;
+      font-weight: 700;
+    }
+
+    input, textarea {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 12px;
+      margin-top: 10px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-size: 15px;
+      font-family: Arial, sans-serif;
+    }
+
+    textarea {
+      min-height: 86px;
+      resize: vertical;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .small {
+      font-size: 13px;
+      color: #667684;
+      margin-top: -4px;
+    }
+
+    .submit {
+      width: 100%;
+      margin-top: 28px;
+      padding: 15px;
+      border: 0;
+      border-radius: 12px;
+      background: var(--ufi-green);
+      color: white;
+      font-size: 17px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .submit:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    #message {
+      margin-top: 16px;
+      font-weight: 700;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <h1>Vote for a future UFI Experience</h1>
+    <p class="intro">Choose a city and topic. This should take less than one minute.</p>
+
+    <div class="section">
+      <h2>1. Which city would you choose for a future UFI Experience?</h2>
+      <div id="city-options"></div>
+      <input id="city-other" class="hidden" placeholder="Please specify city">
+    </div>
+
+    <div class="section">
+      <h2>2. What type of Experience interests you most?</h2>
+      <div id="topic-options"></div>
+      <input id="topic-other" class="hidden" placeholder="Please specify topic">
+    </div>
+
+    <div class="section">
+      <h2>3. Do you have local ideas, venues, or contacts relevant to a future UFI Experience?</h2>
+      <button class="option contact-option" data-value="No">No</button>
+      <button class="option contact-option" data-value="Yes — related to my selected city/topic">Yes — related to my selected city/topic</button>
+      <button class="option contact-option" data-value="Yes — related to another city/topic">Yes — related to another city/topic</button>
+
+      <input id="contact-city-topic" class="hidden" placeholder="Which city/topic? e.g. Manchester – sports venues">
+      <textarea id="contact-note" class="hidden" placeholder="Anything you’d like to share? Venue, organisation, contact, idea, etc."></textarea>
+    </div>
+
+    <div class="section">
+      <h2>4. Email address</h2>
+      <p class="small">Optional. Leave your email if you’d like us to follow up.</p>
+      <input id="email" type="email" placeholder="Email address">
+    </div>
+
+    <button id="submit-button" class="submit" onclick="submitVote()">Submit vote</button>
+    <p id="message"></p>
+  </div>
+
+<script>
+  const SUPABASE_URL = "https://bsmgmwljirnmreythnjl.supabase.co";
+
+  const SUPABASE_ANON_KEY =
+    "sb_publishable_kcnz-yl-MevIJ9MMavcMnw_L5DFO0cv";
+
+  const db = supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_ANON_KEY
+  );
+
+  const cities = [
+    "Amsterdam, Netherlands",
+    "Berlin, Germany",
+    "Birmingham, United Kingdom",
+    "Budapest, Hungary",
+    "Copenhagen, Denmark",
+    "Dublin, Ireland",
+    "Edinburgh, United Kingdom",
+    "Helsinki, Finland",
+    "Lisbon, Portugal",
+    "Ljubljana, Slovenia",
+    "Lyon, France",
+    "Madrid, Spain",
+    "Milan, Italy",
+    "Munich, Germany",
+    "Paris, France",
+    "Prague, Czech Republic",
+    "Rotterdam, Netherlands",
+    "Rome, Italy",
+    "Stockholm, Sweden",
+    "Valencia, Spain",
+    "Warsaw, Poland",
+    "Other"
+  ];
+
+  const topics = [
+    "Sustainability in Practice",
+    "Sports & Live Event Delivery",
+    "Consumer Brands & Retail Experiences",
+    "Entertainment & Festivals",
+    "Cultural & Museum Experiences",
+    "Food & Hospitality Systems",
+    "Other"
+  ];
+
+  let selectedCity = "";
+  let selectedTopic = "";
+  let selectedContact = "";
+
+  function createOptions(containerId, items, type) {
+    const container = document.getElementById(containerId);
+
+    items.forEach(item => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "option";
+      btn.textContent = item;
+
+      btn.onclick = () => {
+        document
+          .querySelectorAll(`#${containerId} .option`)
+          .forEach(b => b.classList.remove("selected"));
+
+        btn.classList.add("selected");
+
+        if (type === "city") {
+          selectedCity = item;
+          document
+            .getElementById("city-other")
+            .classList.toggle("hidden", item !== "Other");
+        }
+
+        if (type === "topic") {
+          selectedTopic = item;
+          document
+            .getElementById("topic-other")
+            .classList.toggle("hidden", item !== "Other");
+        }
+      };
+
+      container.appendChild(btn);
+    });
+  }
+
+  createOptions("city-options", cities, "city");
+  createOptions("topic-options", topics, "topic");
+
+  document.querySelectorAll(".contact-option").forEach(btn => {
+    btn.onclick = () => {
+      document
+        .querySelectorAll(".contact-option")
+        .forEach(b => b.classList.remove("selected"));
+
+      btn.classList.add("selected");
+      selectedContact = btn.dataset.value;
+
+      const showNote =
+        selectedContact.includes("Yes");
+
+      const showOtherCity =
+        selectedContact.includes("another");
+
+      document
+        .getElementById("contact-note")
+        .classList.toggle("hidden", !showNote);
+
+      document
+        .getElementById("contact-city-topic")
+        .classList.toggle("hidden", !showOtherCity);
+    };
+  });
+
+  async function submitVote() {
+    const msg = document.getElementById("message");
+    const submitButton = document.getElementById("submit-button");
+
+    msg.textContent = "";
+    msg.style.color = "";
+
+    if (!selectedCity || !selectedTopic) {
+      msg.textContent = "Please select a city and a topic.";
+      msg.style.color = "red";
+      return;
+    }
+
+    const payload = {
+      city: selectedCity,
+      city_other: document.getElementById("city-other").value || null,
+      topic: selectedTopic,
+      topic_other: document.getElementById("topic-other").value || null,
+      contact_relevance: selectedContact || null,
+      contact_city_topic: document.getElementById("contact-city-topic").value || null,
+      contact_note: document.getElementById("contact-note").value || null,
+      email: document.getElementById("email").value || null
+    };
+
+    submitButton.disabled = true;
+    submitButton.textContent = "Submitting...";
+
+    const { error } = await db
+      .from("votes")
+      .insert([payload]);
+
+    if (error) {
+      msg.textContent = "Error: " + error.message;
+      msg.style.color = "red";
+      console.error("Supabase insert error:", error);
+      submitButton.disabled = false;
+      submitButton.textContent = "Submit vote";
+      return;
+    }
+
+    msg.textContent = "Thank you — your vote has been submitted.";
+    msg.style.color = "green";
+    submitButton.textContent = "Submitted";
+  }
+</script>
+</body>
+</html>
