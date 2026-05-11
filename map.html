@@ -34,7 +34,7 @@
       top: 0;
       left: 0;
       right: 0;
-      height: 78px;
+      height: 82px;
       background: #0d3956;
       z-index: 1000;
       display: flex;
@@ -75,7 +75,10 @@
   const SUPABASE_ANON_KEY =
     "sb_publishable_kcnz-yl-MevIJ9MMavcMnw_L5DFO0cv";
 
-  const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const db = supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_ANON_KEY
+  );
 
   const cities = {
     "Amsterdam, Netherlands": [52.3676, 4.9041],
@@ -125,12 +128,12 @@
   });
 
   const europeBounds = [
-    [36, -11],
-    [61, 26]
+    [38, -9],
+    [58.5, 23]
   ];
 
   map.fitBounds(europeBounds, {
-    paddingTopLeft: [0, 125],
+    paddingTopLeft: [0, 155],
     paddingBottomRight: [0, 0]
   });
 
@@ -141,8 +144,8 @@
   }
 
   function markerRadius(count) {
-    if (count === 0) return 5;
-    return Math.min(7 + count * 3, 38);
+    if (count === 0) return 3.5;
+    return Math.min(4 + count * 1.8, 22);
   }
 
   function renderMarkers(counts = {}) {
