@@ -11,6 +11,7 @@
     :root {
       --ufi-blue: #0d3956;
       --ufi-green: #79BD43;
+      --bg-green: #7f9633;
       --light-bg: #f5f7f8;
       --border: #d6dde2;
     }
@@ -18,7 +19,7 @@
     body {
       margin: 0;
       font-family: Arial, sans-serif;
-      background: var(--light-bg);
+      background: var(--bg-green);
       color: var(--ufi-blue);
       padding: 24px;
     }
@@ -27,21 +28,22 @@
       max-width: 620px;
       margin: 0 auto;
       background: white;
-      border-radius: 18px;
+      border-radius: 14px;
       padding: 26px;
       box-shadow: 0 4px 18px rgba(0,0,0,0.08);
     }
 
     h1 {
-      font-size: 26px;
-      margin: 0 0 6px;
+      font-size: 24px;
+      margin: 0 0 8px;
       color: var(--ufi-blue);
     }
 
     .intro {
-      font-size: 14px;
+      font-size: 13px;
       color: #52616d;
       margin-bottom: 22px;
+      line-height: 1.4;
     }
 
     .section {
@@ -49,9 +51,10 @@
     }
 
     h2 {
-      font-size: 18px;
-      margin-bottom: 6px;
+      font-size: 17px;
+      margin: 0 0 4px;
       color: var(--ufi-blue);
+      line-height: 1.25;
     }
 
     .small {
@@ -63,10 +66,10 @@
     .option {
       display: block;
       width: 100%;
-      padding: 13px 14px;
-      margin: 8px 0;
+      padding: 12px 14px;
+      margin: 7px 0;
       border: 1px solid var(--border);
-      border-radius: 12px;
+      border-radius: 10px;
       background: white;
       color: var(--ufi-blue);
       text-align: left;
@@ -96,6 +99,10 @@
       resize: vertical;
     }
 
+    .hidden {
+      display: none;
+    }
+
     .checkbox-row {
       display: flex;
       gap: 10px;
@@ -107,10 +114,6 @@
     .checkbox-row input {
       width: auto;
       margin: 0;
-    }
-
-    .hidden {
-      display: none;
     }
 
     .submit {
@@ -134,33 +137,47 @@
     #message {
       margin-top: 16px;
       font-weight: 700;
+      line-height: 1.35;
+    }
+
+    .footer-note {
+      margin-top: 12px;
+      font-size: 12px;
+      color: #667684;
     }
   </style>
 </head>
 
 <body>
   <div class="wrap">
-    <h1>Vote for a future UFI Experience</h1>
-    <p class="intro">Choose up to three cities and up to three topics. This should take less than one minute.</p>
+    <h1>Help shape future UFI Experiences</h1>
+    <p class="intro">
+      UFI Experiences are in-person learning events focused on exploring specialised industry topics and innovations.
+    </p>
 
     <div class="section">
-      <h2>1. Which cities would you choose for a future UFI Experience?</h2>
+      <h2>1. Which cities would you most like to explore through a future UFI Experience?</h2>
       <p class="small">Select up to 3.</p>
       <div id="city-options"></div>
       <input id="city-other" class="hidden" placeholder="Other city">
     </div>
 
     <div class="section">
-      <h2>2. What types of Experience interest you most?</h2>
+      <h2>2. Which topics interest you most?</h2>
       <p class="small">Select up to 3.</p>
       <div id="topic-options"></div>
       <input id="topic-other" class="hidden" placeholder="Other topic">
     </div>
 
     <div class="section">
-      <h2>3. Do you have local ideas, venues, or contacts relevant to a future UFI Experience?</h2>
-      <p class="small">Optional. You can mention a city, venue, organisation, partner, or contact.</p>
-      <textarea id="contact-note" placeholder="Example: Manchester – sports venue contact / Berlin – sustainability partner / Paris – museum contact"></textarea>
+      <h2>3. Do you have local ideas, venues, or contacts that could support a future UFI Experience?</h2>
+      <p class="small">Optional. Please indicate the city and any relevant details.</p>
+
+      <button type="button" class="option contact-option" data-value="No">No</button>
+      <button type="button" class="option contact-option" data-value="Yes — related to my selected city/topic">Yes — related to my selected city/topic</button>
+      <button type="button" class="option contact-option" data-value="Yes — related to another city/topic">Yes — related to another city/topic</button>
+
+      <textarea id="contact-note" class="hidden" placeholder="Example: venue, organisation, local partner, contact, topic idea..."></textarea>
     </div>
 
     <div class="section">
@@ -177,6 +194,7 @@
 
     <button id="submit-button" class="submit" onclick="submitVote()">Submit vote</button>
     <p id="message"></p>
+    <p class="footer-note">Your response will help UFI shape future Experience ideas.</p>
   </div>
 
 <script>
@@ -224,8 +242,9 @@
 
   let selectedCities = [];
   let selectedTopics = [];
+  let selectedContact = "";
 
-  function createOptions(containerId, items, type, maxSelections) {
+  function createOptions(containerId, items, selectedArray, maxSelections, otherInputId) {
     const container = document.getElementById(containerId);
 
     items.forEach(item => {
@@ -235,14 +254,8 @@
       btn.textContent = item;
 
       btn.onclick = () => {
-        const selectedArray = type === "city" ? selectedCities : selectedTopics;
-        const otherInput = type === "city"
-          ? document.getElementById("city-other")
-          : document.getElementById("topic-other");
-
         if (selectedArray.includes(item)) {
-          const idx = selectedArray.indexOf(item);
-          selectedArray.splice(idx, 1);
+          selectedArray.splice(selectedArray.indexOf(item), 1);
           btn.classList.remove("selected");
         } else {
           if (selectedArray.length >= maxSelections) {
@@ -253,6 +266,7 @@
           btn.classList.add("selected");
         }
 
+        const otherInput = document.getElementById(otherInputId);
         otherInput.classList.toggle("hidden", !selectedArray.includes("Other"));
       };
 
@@ -260,8 +274,19 @@
     });
   }
 
-  createOptions("city-options", cities, "city", 3);
-  createOptions("topic-options", topics, "topic", 3);
+  createOptions("city-options", cities, selectedCities, 3, "city-other");
+  createOptions("topic-options", topics, selectedTopics, 3, "topic-other");
+
+  document.querySelectorAll(".contact-option").forEach(btn => {
+    btn.onclick = () => {
+      document.querySelectorAll(".contact-option").forEach(b => b.classList.remove("selected"));
+      btn.classList.add("selected");
+      selectedContact = btn.dataset.value;
+
+      const showNote = selectedContact.includes("Yes");
+      document.getElementById("contact-note").classList.toggle("hidden", !showNote);
+    };
+  });
 
   async function submitVote() {
     const msg = document.getElementById("message");
@@ -289,10 +314,11 @@
       city_other: city === "Other" ? cityOther : null,
       topic: topicText,
       topic_other: selectedTopics.includes("Other") ? topicOther : null,
-      contact_relevance: stayUpdated ? "Yes, keep me updated" : null,
+      contact_relevance: selectedContact || null,
       contact_city_topic: null,
       contact_note: contactNote,
-      email: email
+      email: email,
+      stay_updated: stayUpdated
     }));
 
     submitButton.disabled = true;
