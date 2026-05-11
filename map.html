@@ -6,7 +6,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://unpkg.com/topojson-client@3"></script>
@@ -30,34 +29,42 @@
       background: #0d3956 !important;
     }
 
-    .title {
+    .title-bar {
       position: absolute;
-      top: 18px;
+      top: 0;
       left: 0;
       right: 0;
-      text-align: center;
-      color: #0d3956;
-      font-size: 36px;
-      font-weight: 500;
+      height: 78px;
+      background: #0d3956;
       z-index: 1000;
-      pointer-events: none;
-      text-shadow: 0 1px 3px rgba(255,255,255,0.85);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+    }
+
+    .title {
+      color: #ffffff;
+      font-size: 34px;
+      font-weight: 400;
+      text-align: center;
+      letter-spacing: 0.2px;
     }
 
     .city-label {
-      color: #0d3956;
+      color: #ffffff;
       font-size: 11px;
       font-weight: 700;
       white-space: nowrap;
-      text-shadow: 0 1px 3px rgba(255,255,255,0.9);
+      text-shadow: 0 1px 4px rgba(0,0,0,0.75);
     }
   </style>
 </head>
 
 <body>
 
-<div class="title">
-  Where do you want to go for the next UFI Experience?
+<div class="title-bar">
+  <div class="title">Where do you want to go for the next UFI Experience?</div>
 </div>
 
 <div id="map"></div>
@@ -68,10 +75,7 @@
   const SUPABASE_ANON_KEY =
     "sb_publishable_kcnz-yl-MevIJ9MMavcMnw_L5DFO0cv";
 
-  const db = supabase.createClient(
-    SUPABASE_URL,
-    SUPABASE_ANON_KEY
-  );
+  const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
   const cities = {
     "Amsterdam, Netherlands": [52.3676, 4.9041],
@@ -121,12 +125,12 @@
   });
 
   const europeBounds = [
-    [37, -9],
-    [62.5, 25]
+    [36, -11],
+    [61, 26]
   ];
 
   map.fitBounds(europeBounds, {
-    paddingTopLeft: [0, 55],
+    paddingTopLeft: [0, 125],
     paddingBottomRight: [0, 0]
   });
 
@@ -202,7 +206,7 @@
         fillColor: "#ffffff",
         fillOpacity: 1,
         color: "#c9d1b3",
-        weight: 0.7
+        weight: 0.75
       },
       interactive: false
     }).addTo(map);
